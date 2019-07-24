@@ -156,7 +156,7 @@ impl RenderContext {
             }
         }
 
-        ansi_term::ANSIStrings(&ansi_strings);
+        print!("{}", ansi_term::ANSIStrings(&ansi_strings));
         /*
         while pos < (fb_len - self.width) {
             let top_pixel = self.frame_buffer[pos];

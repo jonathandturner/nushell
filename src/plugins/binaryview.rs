@@ -136,6 +136,28 @@ impl RenderContext {
         let cursor = cursor();
         cursor.goto(0, 0)?;
 
+        let mut ansi_strings = vec![];
+
+        while pos < (fb_len - self.width) {
+            let top_pixel = self.frame_buffer[pos];
+            let bottom_pixel = self.frame_buffer[pos + self.width];
+            ansi_strings.push(
+                ansi_term::Colour::RGB(top_pixel.0, top_pixel.1, top_pixel.2)
+                    .on(ansi_term::Colour::RGB(
+                        bottom_pixel.0,
+                        bottom_pixel.1,
+                        bottom_pixel.2,
+                    ))
+                    .paint("▀"),
+            );
+            pos += 1;
+            if pos % self.width == 0 {
+                pos += self.width;
+            }
+        }
+
+        ansi_term::ANSIStrings(&ansi_strings);
+        /*
         while pos < (fb_len - self.width) {
             let top_pixel = self.frame_buffer[pos];
             let bottom_pixel = self.frame_buffer[pos + self.width];
@@ -180,6 +202,7 @@ impl RenderContext {
             }
         }
         println!("{}", Attribute::Reset);
+        */
         Ok(())
     }
     pub fn flush(&mut self) -> Result<(), Box<dyn std::error::Error>> {

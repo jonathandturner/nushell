@@ -5,6 +5,7 @@ use nu::{
     serve_plugin, CallInfo, NamedType, Plugin, ShellError, Signature, SpanSource, Tagged, Value,
 };
 use pretty_hex::*;
+use std::io::BufReader;
 
 struct BinaryView;
 
@@ -51,6 +52,17 @@ fn view_binary(
             (0x4e, 0x45, 0x53) => {
                 view_contents_interactive(b, source, lores_mode)?;
                 return Ok(());
+            }
+            (0x49, 0x44, 0x33) => {
+                if let Some(SpanSource::File(fname)) = source {
+                    println!("Playing 3 secs of {}", fname);
+                    let file = std::fs::File::open(fname).unwrap();
+                    let device = rodio::default_output_device().unwrap();
+                    let play = rodio::play_once(&device, BufReader::new(file)).unwrap();
+                    play.set_volume(1.0);
+                    std::thread::sleep(std::time::Duration::from_millis(3000));
+                    return Ok(());
+                }
             }
             _ => {}
         }

@@ -200,10 +200,17 @@ impl RenderView for TableView {
         let mut table = Table::new();
         table.set_format(
             FormatBuilder::new()
-                .column_separator('│')
-                .separator(LinePosition::Top, LineSeparator::new('━', '┯', ' ', ' '))
-                .separator(LinePosition::Title, LineSeparator::new('─', '┼', ' ', ' '))
-                .separator(LinePosition::Bottom, LineSeparator::new('━', '┷', ' ', ' '))
+                //.column_separator('│')
+                .column_separator('|')
+                // .separator(LinePosition::Top, LineSeparator::new('━', '┯', ' ', ' '))
+                // .separator(LinePosition::Title, LineSeparator::new('─', '┼', ' ', ' '))
+                // .separator(LinePosition::Bottom, LineSeparator::new('━', '┷', ' ', ' '))
+                // .separator(LinePosition::Top, LineSeparator::new('─', '┬', ' ', ' '))
+                // .separator(LinePosition::Title, LineSeparator::new('━', '┿', ' ', ' '))
+                // .separator(LinePosition::Bottom, LineSeparator::new('─', '┴', ' ', ' '))
+                .separator(LinePosition::Top, LineSeparator::new('─', '─', ' ', ' '))
+                .separator(LinePosition::Title, LineSeparator::new('━', '━', ' ', ' '))
+                .separator(LinePosition::Bottom, LineSeparator::new('─', '─', ' ', ' '))
                 .padding(1, 1)
                 .build(),
         );
@@ -212,9 +219,10 @@ impl RenderView for TableView {
             .headers
             .iter()
             .map(|h| {
-                Cell::new(h)
-                    .with_style(Attr::ForegroundColor(color::GREEN))
-                    .with_style(Attr::Bold)
+                Cell::new(h).style_spec("Fgbc")
+                // .with_style(Attr::ForegroundColor(color::GREEN))
+                // .with_style(Attr::Bold)
+                // .align(prettytable::format::Alignment::CENTER)
             })
             .collect();
 

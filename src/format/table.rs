@@ -202,14 +202,8 @@ impl RenderView for TableView {
             FormatBuilder::new()
                 .column_separator('│')
                 .separator(LinePosition::Top, LineSeparator::new('━', '┯', ' ', ' '))
-                // .separator(LinePosition::Title, LineSeparator::new('─', '┼', ' ', ' '))
-                // .separator(LinePosition::Bottom, LineSeparator::new('━', '┷', ' ', ' '))
-                // .separator(LinePosition::Top, LineSeparator::new('─', '┬', ' ', ' '))
                 .separator(LinePosition::Title, LineSeparator::new('━', '┿', ' ', ' '))
                 .separator(LinePosition::Bottom, LineSeparator::new('─', '┴', ' ', ' '))
-                //.separator(LinePosition::Top, LineSeparator::new('─', '─', ' ', ' '))
-                //.separator(LinePosition::Title, LineSeparator::new('━', '━', ' ', ' '))
-                //.separator(LinePosition::Bottom, LineSeparator::new('─', '─', ' ', ' '))
                 .padding(1, 1)
                 .build(),
         );
@@ -217,7 +211,7 @@ impl RenderView for TableView {
         let header: Vec<Cell> = self
             .headers
             .iter()
-            .map(|h| Cell::new(h).style_spec("Fgbc"))
+            .map(|h| Cell::new(h).style_spec("Fgbl"))
             .collect();
 
         table.set_titles(Row::new(header));

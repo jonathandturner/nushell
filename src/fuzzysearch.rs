@@ -81,10 +81,10 @@ pub fn interactive_fuzzy_search(lines: &Vec<&str>, max_results: usize) -> Select
                     }
                 }
                 if num_lines > 0 {
-                    cursor.move_up(num_lines as u16);
+                    let _ = cursor.move_up(num_lines as u16);
                 }
             }
-            let (_x, y) = cursor.pos();
+            let (_x, y) = cursor.pos().unwrap();
             let _ = cursor.goto(0, y - 1);
             let _ = cursor.show();
             let _ = RawScreen::disable_raw_mode();
@@ -154,10 +154,10 @@ fn highlight(textmatch: &Match, normal: Style, highlighted: Style) -> Vec<ANSISt
 #[cfg(feature = "crossterm")]
 fn paint_selection_list(lines: &Vec<Match>, selected: usize) {
     let terminal = terminal();
-    let size = terminal.terminal_size();
+    let size = terminal.size().unwrap();
     let width = size.0 as usize;
     let cursor = cursor();
-    let (_x, y) = cursor.pos();
+    let (_x, y) = cursor.pos().unwrap();
     for (i, line) in lines.iter().enumerate() {
         let _ = cursor.goto(0, y + (i as u16));
         let (style, highlighted) = if selected == i {

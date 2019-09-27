@@ -42,7 +42,7 @@ fn paint_textview(
     let terminal = terminal();
     let cursor = cursor();
 
-    let size = terminal.terminal_size();
+    let size = terminal.size().unwrap();
 
     // render
     let mut pos = 0;
@@ -130,7 +130,7 @@ fn scroll_view_lines_if_needed(draw_commands: Vec<DrawCommand>, use_color_buffer
 
     if let Ok(_raw) = RawScreen::into_raw_mode() {
         let terminal = terminal();
-        let mut size = terminal.terminal_size();
+        let mut size = terminal.size().unwrap();
         let height = size.1 as usize - 1;
 
         let mut max_bottom_line = paint_textview(&draw_commands, starting_row, use_color_buffer);
@@ -189,7 +189,7 @@ fn scroll_view_lines_if_needed(draw_commands: Vec<DrawCommand>, use_color_buffer
                     }
                 }
 
-                let new_size = terminal.terminal_size();
+                let new_size = terminal.size().unwrap();
                 if size != new_size {
                     size = new_size;
                     let _ = terminal.clear(crossterm::ClearType::All);

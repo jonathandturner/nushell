@@ -187,7 +187,7 @@ impl RenderContext {
     }
     pub fn update(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let terminal = terminal();
-        let terminal_size = terminal.terminal_size();
+        let terminal_size = terminal.size()?;
 
         if (self.width != terminal_size.0 as usize) || (self.height != terminal_size.1 as usize) {
             let cursor = cursor();

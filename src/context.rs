@@ -7,6 +7,7 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::error::Error;
+use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -75,6 +76,7 @@ pub struct Context {
     registry: CommandRegistry,
     pub(crate) source_map: SourceMap,
     host: Arc<Mutex<dyn Host + Send>>,
+    pub ctrl_c: Arc<AtomicBool>,
     pub(crate) shell_manager: ShellManager,
 }
 
@@ -89,6 +91,7 @@ impl Context {
             registry: registry.clone(),
             source_map: SourceMap::new(),
             host: Arc::new(Mutex::new(crate::env::host::BasicHost)),
+            ctrl_c: Arc::new(AtomicBool::new(false)),
             shell_manager: ShellManager::basic(registry)?,
         })
     }
@@ -156,6 +159,7 @@ impl Context {
     ) -> CommandArgs {
         CommandArgs {
             host: self.host.clone(),
+            ctrl_c: self.ctrl_c.clone(),
             shell_manager: self.shell_manager.clone(),
             call_info: self.call_info(args, source, source_map, name_tag),
             input,

@@ -24,7 +24,7 @@ use std::error::Error;
 use std::io::{BufRead, BufReader, Write};
 use std::iter::Iterator;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::Ordering;
 
 #[derive(Debug)]
 pub enum MaybeOwned<'a, T> {
@@ -327,16 +327,19 @@ pub async fn cli() -> Result<(), Box<dyn Error>> {
     // we are ok if history does not exist
     let _ = rl.load_history(&History::path());
 
-    let ctrl_c = Arc::new(AtomicBool::new(false));
-    let cc = ctrl_c.clone();
+    let cc = context.ctrl_c.clone();
     ctrlc::set_handler(move || {
+        println!("====================CTRL C====================");
+        println!("====================CTRL C====================");
+        println!("====================CTRL C====================");
+        println!("====================CTRL C====================");
         cc.store(true, Ordering::SeqCst);
     })
     .expect("Error setting Ctrl-C handler");
     let mut ctrlcbreak = false;
     loop {
-        if ctrl_c.load(Ordering::SeqCst) {
-            ctrl_c.store(false, Ordering::SeqCst);
+        if context.ctrl_c.load(Ordering::SeqCst) {
+            context.ctrl_c.store(false, Ordering::SeqCst);
             continue;
         }
 
@@ -363,7 +366,7 @@ pub async fn cli() -> Result<(), Box<dyn Error>> {
         #[cfg(all(not(windows), feature = "crossterm"))]
         rl.bind_sequence(rustyline::KeyPress::Ctrl('R'), rustyline::Cmd::EndOfFile);
         // Redefine Ctrl-D to same command as Ctrl-C
-        rl.bind_sequence(rustyline::KeyPress::Ctrl('D'), rustyline::Cmd::Interrupt);
+        rl.bind_sequence(rustyline::KeyPress::Ctrl('C'), rustyline::Cmd::Interrupt);
 
         let prompt = &format!(
             "{}{}> ",
@@ -531,34 +534,39 @@ async fn process_line(readline: Result<String, ReadlineError>, ctx: &mut Context
                     (
                         Some(ClassifiedCommand::Internal(left)),
                         Some(ClassifiedCommand::External(_)),
-                    ) => match left
-                        .run(ctx, input, Text::from(line), is_first_command)
-                        
-                    {
+                    ) => match left.run(ctx, input, Text::from(line), is_first_command) {
                         Ok(val) => ClassifiedInputStream::from_input_stream(val),
                         Err(err) => return LineResult::Error(line.clone(), err),
                     },
 
                     (Some(ClassifiedCommand::Internal(left)), Some(_)) => {
-                        match left
-                            .run(ctx, input, Text::from(line), is_first_command)
-                            
-                        {
+                        match left.run(ctx, input, Text::from(line), is_first_command) {
                             Ok(val) => ClassifiedInputStream::from_input_stream(val),
                             Err(err) => return LineResult::Error(line.clone(), err),
                         }
                     }
 
                     (Some(ClassifiedCommand::Internal(left)), None) => {
-                        match left
-                            .run(ctx, input, Text::from(line), is_first_command)
-                            
-                        {
+                        match left.run(ctx, input, Text::from(line), is_first_command) {
                             Ok(val) => {
+                                use futures::stream::TryStreamExt;
+
                                 //ClassifiedInputStream::from_input_stream(val),
                                 println!("Collecting stream...");
-                                let v = val.into_vec().await;
-                                println!("Total: {}", v.len());
+                                let mut output_stream = val.to_output_stream();
+                                loop {
+                                    match output_stream.try_next().await {
+                                        Ok(Some(_item)) => {
+                                            if ctx.ctrl_c.load(Ordering::SeqCst) {
+                                                break;
+                                            }
+                                        }
+                                        _ => {
+                                            break;
+                                        }
+                                    }
+                                }
+
                                 return LineResult::Success(String::new());
                             }
                             Err(err) => return LineResult::Error(line.clone(), err),

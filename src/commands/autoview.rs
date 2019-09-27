@@ -2,6 +2,7 @@ use crate::commands::{RawCommandArgs, WholeStreamCommand};
 use crate::errors::ShellError;
 use crate::prelude::*;
 use futures::stream::Stream;
+use std::sync::atomic::Ordering;
 
 pub struct Autoview;
 
@@ -99,6 +100,9 @@ pub fn autoview(
         // let table = context.expect_command("table");
         let mut output_stream = context.input.to_output_stream();
         while let Some(input) = output_stream.try_next().await.unwrap() {
+            if context.ctrl_c.load(Ordering::SeqCst) {
+                break;
+            }
             let raw = raw.clone();
             match input {
                 ReturnSuccess::Value(v) => {

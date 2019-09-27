@@ -533,7 +533,7 @@ async fn process_line(readline: Result<String, ReadlineError>, ctx: &mut Context
                         Some(ClassifiedCommand::External(_)),
                     ) => match left
                         .run(ctx, input, Text::from(line), is_first_command)
-                        .await
+                        
                     {
                         Ok(val) => ClassifiedInputStream::from_input_stream(val),
                         Err(err) => return LineResult::Error(line.clone(), err),
@@ -542,7 +542,7 @@ async fn process_line(readline: Result<String, ReadlineError>, ctx: &mut Context
                     (Some(ClassifiedCommand::Internal(left)), Some(_)) => {
                         match left
                             .run(ctx, input, Text::from(line), is_first_command)
-                            .await
+                            
                         {
                             Ok(val) => ClassifiedInputStream::from_input_stream(val),
                             Err(err) => return LineResult::Error(line.clone(), err),
@@ -552,9 +552,15 @@ async fn process_line(readline: Result<String, ReadlineError>, ctx: &mut Context
                     (Some(ClassifiedCommand::Internal(left)), None) => {
                         match left
                             .run(ctx, input, Text::from(line), is_first_command)
-                            .await
+                            
                         {
-                            Ok(val) => ClassifiedInputStream::from_input_stream(val),
+                            Ok(val) => {
+                                //ClassifiedInputStream::from_input_stream(val),
+                                println!("Collecting stream...");
+                                let v = val.into_vec().await;
+                                println!("Total: {}", v.len());
+                                return LineResult::Success(String::new());
+                            }
                             Err(err) => return LineResult::Error(line.clone(), err),
                         }
                     }

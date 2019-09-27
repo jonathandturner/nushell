@@ -91,7 +91,7 @@ pub(crate) struct InternalCommand {
 }
 
 impl InternalCommand {
-    pub(crate) async fn run(
+    pub(crate) fn run(
         self,
         context: &mut Context,
         input: ClassifiedInputStream,
@@ -107,6 +107,7 @@ impl InternalCommand {
         let objects: InputStream =
             trace_stream!(target: "nu::trace_stream::internal", "input" = input.objects);
 
+        let mut context = context.clone();
         let result = context.run_command(
             self.command,
             self.name_tag.clone(),
@@ -120,68 +121,70 @@ impl InternalCommand {
         let result = trace_out_stream!(target: "nu::trace_stream::internal", source: &source, "output" = result);
         let mut result = result.values;
 
-        let mut stream = VecDeque::new();
-        while let Some(item) = result.next().await {
-            match item? {
-                ReturnSuccess::Action(action) => match action {
-                    CommandAction::ChangePath(path) => {
-                        context.shell_manager.set_path(path);
-                    }
-                    CommandAction::AddSpanSource(uuid, span_source) => {
-                        context.add_span_source(uuid, span_source);
-                    }
-                    CommandAction::Exit => std::process::exit(0), // TODO: save history.txt
-                    CommandAction::EnterHelpShell(value) => {
-                        match value {
-                            Tagged {
-                                item: Value::Primitive(Primitive::String(cmd)),
-                                tag,
-                            } => {
-                                context.shell_manager.insert_at_current(Box::new(
-                                    HelpShell::for_command(
-                                        Value::string(cmd).tagged(tag),
-                                        &context.registry(),
-                                    )?,
-                                ));
-                            }
-                            _ => {
-                                context.shell_manager.insert_at_current(Box::new(
-                                    HelpShell::index(&context.registry())?,
-                                ));
+        let stream = async_stream_block! {
+            while let Some(item) = result.next().await {
+                match item.unwrap() {
+                    ReturnSuccess::Action(action) => match action {
+                        CommandAction::ChangePath(path) => {
+                            context.shell_manager.set_path(path);
+                        }
+                        CommandAction::AddSpanSource(uuid, span_source) => {
+                            context.add_span_source(uuid, span_source);
+                        }
+                        CommandAction::Exit => std::process::exit(0), // TODO: save history.txt
+                        CommandAction::EnterHelpShell(value) => {
+                            match value {
+                                Tagged {
+                                    item: Value::Primitive(Primitive::String(cmd)),
+                                    tag,
+                                } => {
+                                    context.shell_manager.insert_at_current(Box::new(
+                                        HelpShell::for_command(
+                                            Value::string(cmd).tagged(tag),
+                                            &context.registry(),
+                                        ).unwrap(),
+                                    ));
+                                }
+                                _ => {
+                                    context.shell_manager.insert_at_current(Box::new(
+                                        HelpShell::index(&context.registry()).unwrap(),
+                                    ));
+                                }
                             }
                         }
-                    }
-                    CommandAction::EnterValueShell(value) => {
-                        context
-                            .shell_manager
-                            .insert_at_current(Box::new(ValueShell::new(value)));
-                    }
-                    CommandAction::EnterShell(location) => {
-                        context.shell_manager.insert_at_current(Box::new(
-                            FilesystemShell::with_location(location, context.registry().clone())?,
-                        ));
-                    }
-                    CommandAction::PreviousShell => {
-                        context.shell_manager.prev();
-                    }
-                    CommandAction::NextShell => {
-                        context.shell_manager.next();
-                    }
-                    CommandAction::LeaveShell => {
-                        context.shell_manager.remove_at_current();
-                        if context.shell_manager.is_empty() {
-                            std::process::exit(0); // TODO: save history.txt
+                        CommandAction::EnterValueShell(value) => {
+                            context
+                                .shell_manager
+                                .insert_at_current(Box::new(ValueShell::new(value)));
                         }
-                    }
-                },
+                        CommandAction::EnterShell(location) => {
+                            context.shell_manager.insert_at_current(Box::new(
+                                FilesystemShell::with_location(location, context.registry().clone()).unwrap(),
+                            ));
+                        }
+                        CommandAction::PreviousShell => {
+                            context.shell_manager.prev();
+                        }
+                        CommandAction::NextShell => {
+                            context.shell_manager.next();
+                        }
+                        CommandAction::LeaveShell => {
+                            context.shell_manager.remove_at_current();
+                            if context.shell_manager.is_empty() {
+                                std::process::exit(0); // TODO: save history.txt
+                            }
+                        }
+                    },
 
-                ReturnSuccess::Value(v) => {
-                    stream.push_back(v);
+                    ReturnSuccess::Value(v) => {
+                        yield v;
+                    }
                 }
             }
-        }
+        };
 
-        Ok(stream.into())
+        //Ok(stream.into())
+        Ok(stream.to_input_stream())
     }
 }
 

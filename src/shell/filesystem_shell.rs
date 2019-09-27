@@ -159,6 +159,7 @@ impl Shell for FilesystemShell {
                     } else {
                         Path::new(&entry)
                     };
+                    //println!("LS: {:?}", filename);
                     let metadata = std::fs::metadata(&entry).unwrap();
                     let value = dir_entry_dict(filename, &metadata, command_tag).unwrap();
                     yield ReturnSuccess::value(value);

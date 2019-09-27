@@ -114,3 +114,19 @@ where
         }
     }
 }
+
+pub trait ToInputSteam {
+    fn to_input_stream(self) -> InputStream;
+}
+
+impl<T, U> ToInputSteam for T
+where
+    T: Stream<Item = U> + Send + 'static,
+    U: Into<Tagged<Value>>,
+{
+    fn to_input_stream(self) -> InputStream {
+        InputStream {
+            values: self.map(|item| item.into()).boxed(),
+        }
+    }
+}

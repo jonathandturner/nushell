@@ -8,7 +8,6 @@ use crate::parser::parse::tokens::{RawNumber, RawToken};
 use crate::parser::parse::unit::Unit;
 use crate::parser::CallNode;
 use derive_new::new;
-use uuid::Uuid;
 
 #[derive(new)]
 pub struct TokenTreeBuilder {
@@ -17,16 +16,14 @@ pub struct TokenTreeBuilder {
 
     #[new(default)]
     output: String,
-
-    origin: Uuid,
 }
 
 pub type CurriedToken = Box<dyn FnOnce(&mut TokenTreeBuilder) -> TokenNode + 'static>;
 pub type CurriedCall = Box<dyn FnOnce(&mut TokenTreeBuilder) -> Tagged<CallNode> + 'static>;
 
 impl TokenTreeBuilder {
-    pub fn build(origin: Uuid, block: impl FnOnce(&mut Self) -> TokenNode) -> (TokenNode, String) {
-        let mut builder = TokenTreeBuilder::new(origin);
+    pub fn build(block: impl FnOnce(&mut Self) -> TokenNode) -> (TokenNode, String) {
+        let mut builder = TokenTreeBuilder::new();
         let node = block(&mut builder);
         (node, builder.output)
     }
@@ -36,7 +33,7 @@ impl TokenTreeBuilder {
         let ret = callback(self);
         let end = self.pos;
 
-        ret.tagged((start, end, self.origin))
+        ret.tagged((start, end))
     }
 
     pub fn pipeline(input: Vec<Vec<CurriedToken>>) -> CurriedToken {
@@ -66,14 +63,14 @@ impl TokenTreeBuilder {
                             b.build_tagged(|b| node.into_iter().map(|node| node(b)).collect());
                         let end = b.pos;
 
-                        out.push(PipelineElement::new(pipe, node).tagged((start, end, b.origin)));
+                        out.push(PipelineElement::new(pipe, node).tagged((start, end)));
                     }
                 }
             }
 
             let end = b.pos;
 
-            TokenTreeBuilder::tagged_pipeline(out, (start, end, b.origin))
+            TokenTreeBuilder::tagged_pipeline(out, (start, end))
         })
     }
 
@@ -87,7 +84,7 @@ impl TokenTreeBuilder {
             let tokens = input.into_iter().map(|i| i(b)).collect();
             let end = b.pos;
 
-            TokenTreeBuilder::tagged_token_list(tokens, (start, end, b.origin))
+            TokenTreeBuilder::tagged_token_list(tokens, (start, end))
         })
     }
 
@@ -103,7 +100,7 @@ impl TokenTreeBuilder {
 
             b.pos = end;
 
-            TokenTreeBuilder::tagged_op(input, (start, end, b.origin))
+            TokenTreeBuilder::tagged_op(input, (start, end))
         })
     }
 
@@ -120,10 +117,7 @@ impl TokenTreeBuilder {
             let (_, end) = b.consume("\"");
             b.pos = end;
 
-            TokenTreeBuilder::tagged_string(
-                (inner_start, inner_end, b.origin),
-                (start, end, b.origin),
-            )
+            TokenTreeBuilder::tagged_string((inner_start, inner_end), (start, end))
         })
     }
 
@@ -138,7 +132,7 @@ impl TokenTreeBuilder {
             let (start, end) = b.consume(&input);
             b.pos = end;
 
-            TokenTreeBuilder::tagged_bare((start, end, b.origin))
+            TokenTreeBuilder::tagged_bare((start, end))
         })
     }
 
@@ -153,7 +147,7 @@ impl TokenTreeBuilder {
             let (start, end) = b.consume(&input);
             b.pos = end;
 
-            TokenTreeBuilder::tagged_pattern((start, end, b.origin))
+            TokenTreeBuilder::tagged_pattern((start, end))
         })
     }
 
@@ -168,7 +162,7 @@ impl TokenTreeBuilder {
             let (start, end) = b.consume(&input);
             b.pos = end;
 
-            TokenTreeBuilder::tagged_external_word((start, end, b.origin))
+            TokenTreeBuilder::tagged_external_word((start, end))
         })
     }
 
@@ -184,10 +178,7 @@ impl TokenTreeBuilder {
             let (inner_start, end) = b.consume(&input);
             b.pos = end;
 
-            TokenTreeBuilder::tagged_external_command(
-                (inner_start, end, b.origin),
-                (outer_start, end, b.origin),
-            )
+            TokenTreeBuilder::tagged_external_command((inner_start, end), (outer_start, end))
         })
     }
 
@@ -202,10 +193,7 @@ impl TokenTreeBuilder {
             let (start, end) = b.consume(&int.to_string());
             b.pos = end;
 
-            TokenTreeBuilder::tagged_number(
-                RawNumber::Int((start, end, b.origin).into()),
-                (start, end, b.origin),
-            )
+            TokenTreeBuilder::tagged_number(RawNumber::Int((start, end).into()), (start, end))
         })
     }
 
@@ -216,10 +204,7 @@ impl TokenTreeBuilder {
             let (start, end) = b.consume(&decimal.to_string());
             b.pos = end;
 
-            TokenTreeBuilder::tagged_number(
-                RawNumber::Decimal((start, end, b.origin).into()),
-                (start, end, b.origin),
-            )
+            TokenTreeBuilder::tagged_number(RawNumber::Decimal((start, end).into()), (start, end))
         })
     }
 
@@ -237,8 +222,8 @@ impl TokenTreeBuilder {
             b.pos = end_unit;
 
             TokenTreeBuilder::tagged_size(
-                (RawNumber::Int((start_int, end_int, b.origin).into()), unit),
-                (start_int, end_unit, b.origin),
+                (RawNumber::Int((start_int, end_int).into()), unit),
+                (start_int, end_unit),
             )
         })
     }
@@ -259,7 +244,7 @@ impl TokenTreeBuilder {
             let (start, _) = b.consume("$");
             let (inner_start, end) = b.consume(&input);
 
-            TokenTreeBuilder::tagged_var((inner_start, end, b.origin), (start, end, b.origin))
+            TokenTreeBuilder::tagged_var((inner_start, end), (start, end))
         })
     }
 
@@ -274,7 +259,7 @@ impl TokenTreeBuilder {
             let (start, _) = b.consume("--");
             let (inner_start, end) = b.consume(&input);
 
-            TokenTreeBuilder::tagged_flag((inner_start, end, b.origin), (start, end, b.origin))
+            TokenTreeBuilder::tagged_flag((inner_start, end), (start, end))
         })
     }
 
@@ -289,7 +274,7 @@ impl TokenTreeBuilder {
             let (start, _) = b.consume("-");
             let (inner_start, end) = b.consume(&input);
 
-            TokenTreeBuilder::tagged_shorthand((inner_start, end, b.origin), (start, end, b.origin))
+            TokenTreeBuilder::tagged_shorthand((inner_start, end), (start, end))
         })
     }
 
@@ -302,7 +287,7 @@ impl TokenTreeBuilder {
 
         Box::new(move |b| {
             let (start, end) = b.consume(&input);
-            TokenTreeBuilder::tagged_member((start, end, b.origin))
+            TokenTreeBuilder::tagged_member((start, end))
         })
     }
 
@@ -323,7 +308,7 @@ impl TokenTreeBuilder {
 
             let end = b.pos;
 
-            TokenTreeBuilder::tagged_call(nodes, (start, end, b.origin))
+            TokenTreeBuilder::tagged_call(nodes, (start, end))
         })
     }
 
@@ -350,7 +335,7 @@ impl TokenTreeBuilder {
 
             let (_, end) = b.consume(")");
 
-            TokenTreeBuilder::tagged_parens(output, (start, end, b.origin))
+            TokenTreeBuilder::tagged_parens(output, (start, end))
         })
     }
 
@@ -368,7 +353,7 @@ impl TokenTreeBuilder {
 
             let (_, end) = b.consume("]");
 
-            TokenTreeBuilder::tagged_square(output, (start, end, b.origin))
+            TokenTreeBuilder::tagged_square(output, (start, end))
         })
     }
 
@@ -386,7 +371,7 @@ impl TokenTreeBuilder {
 
             let (_, end) = b.consume(" }");
 
-            TokenTreeBuilder::tagged_brace(output, (start, end, b.origin))
+            TokenTreeBuilder::tagged_brace(output, (start, end))
         })
     }
 
@@ -397,7 +382,7 @@ impl TokenTreeBuilder {
     pub fn sp() -> CurriedToken {
         Box::new(|b| {
             let (start, end) = b.consume(" ");
-            TokenNode::Whitespace(Tag::from((start, end, b.origin)))
+            TokenNode::Whitespace(Tag::from((start, end)))
         })
     }
 
@@ -406,7 +391,7 @@ impl TokenTreeBuilder {
 
         Box::new(move |b| {
             let (start, end) = b.consume(&input);
-            TokenTreeBuilder::tagged_ws((start, end, b.origin))
+            TokenTreeBuilder::tagged_ws((start, end))
         })
     }
 
@@ -425,6 +410,6 @@ impl TokenTreeBuilder {
         let start = self.pos;
         self.pos += input.len();
         self.output.push_str(input);
-        (start, self.pos, self.origin).into()
+        (start, self.pos).into()
     }
 }

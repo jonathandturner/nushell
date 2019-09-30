@@ -137,8 +137,8 @@ impl InternalCommand {
                     CommandAction::ChangePath(path) => {
                         context.shell_manager.set_path(path);
                     }
-                    CommandAction::AddSpanSource(uuid, span_source) => {
-                        context.add_span_source(uuid, span_source);
+                    CommandAction::AddAnchorLocation(uuid, anchor_location) => {
+                        context.add_anchor_location(uuid, anchor_location);
                     }
                     CommandAction::Exit => std::process::exit(0), // TODO: save history.txt
                     CommandAction::EnterHelpShell(value) => {
@@ -325,7 +325,6 @@ impl ExternalCommand {
                         }
                     }
                 }
-                println!("");
                 Ok(ClassifiedInputStream::new())
             }
             StreamNext::External => {

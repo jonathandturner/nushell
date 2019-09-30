@@ -2,8 +2,8 @@ use crate::errors::ShellError;
 use crate::parser::{
     hir,
     hir::syntax_shape::{
-        continue_expression, expand_expr, expand_syntax, ExpandContext,
-        ExpandExpression, ExpressionListShape, PathTailShape, VariablePathShape,
+        continue_expression, expand_expr, expand_syntax, ExpandContext, ExpandExpression,
+        ExpressionListShape, PathTailShape, VariablePathShape,
     },
     hir::tokens_iterator::TokensIterator,
     RawToken, TokenNode,
@@ -123,7 +123,7 @@ impl ExpandExpression for ShorthandHeadShape {
                 peeked.commit();
 
                 // Synthesize an `$it` expression
-                let it = synthetic_it(token_nodes.origin());
+                let it = synthetic_it();
 
                 // Make a path out of `$it` and the bare token as a member
                 Ok(hir::Expression::path(
@@ -142,7 +142,7 @@ impl ExpandExpression for ShorthandHeadShape {
                 peeked.commit();
 
                 // Synthesize an `$it` expression
-                let it = synthetic_it(token_nodes.origin());
+                let it = synthetic_it();
 
                 // Make a path out of `$it` and the bare token as a member
                 Ok(hir::Expression::path(
@@ -163,6 +163,6 @@ impl ExpandExpression for ShorthandHeadShape {
     }
 }
 
-fn synthetic_it(origin: uuid::Uuid) -> hir::Expression {
-    hir::Expression::it_variable(Tag::unknown_span(origin), Tag::unknown_span(origin))
+fn synthetic_it() -> hir::Expression {
+    hir::Expression::it_variable(Tag::unknown(), Tag::unknown())
 }

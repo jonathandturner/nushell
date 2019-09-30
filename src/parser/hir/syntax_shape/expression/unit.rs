@@ -61,18 +61,13 @@ fn unit_size(input: &str, bare_tag: Tag) -> IResult<&str, (Tagged<RawNumber>, Un
                 RawNumber::decimal((
                     bare_tag.span.start(),
                     bare_tag.span.start() + digits.len() + dot.len() + rest.len(),
-                    bare_tag.origin,
                 )),
             )
         }
 
         None => (
             input,
-            RawNumber::int((
-                bare_tag.span.start(),
-                bare_tag.span.start() + digits.len(),
-                bare_tag.origin,
-            )),
+            RawNumber::int((bare_tag.span.start(), bare_tag.span.start() + digits.len())),
         ),
     };
 

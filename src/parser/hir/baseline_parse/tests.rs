@@ -9,7 +9,6 @@ use crate::parser::TokenNode;
 use crate::{Span, Tag, Tagged, TaggedItem, Text};
 use pretty_assertions::assert_eq;
 use std::fmt::Debug;
-use uuid::Uuid;
 
 #[test]
 fn test_parse_string() {
@@ -112,7 +111,7 @@ fn parse_tokens<T: Eq + Debug>(
     expected: impl FnOnce(Tagged<&[TokenNode]>) -> T,
 ) {
     let tokens = b::token_list(tokens);
-    let (tokens, source) = b::build(test_origin(), tokens);
+    let (tokens, source) = b::build(tokens);
 
     ExpandContext::with_empty(&Text::from(source), |context| {
         let tokens = tokens.expect_list();
@@ -132,13 +131,9 @@ fn parse_tokens<T: Eq + Debug>(
     })
 }
 
-fn test_origin() -> Uuid {
-    Uuid::nil()
-}
-
 fn inner_string_tag(tag: Tag) -> Tag {
     Tag {
         span: Span::new(tag.span.start() + 1, tag.span.end() - 1),
-        origin: tag.origin,
+        anchor: tag.anchor,
     }
 }

@@ -30,7 +30,6 @@ pub type NomSpan<'a> = LocatedSpanEx<&'a str, TracableContext>;
 
 #[derive(Debug, Clone, Copy, PartialEq, new)]
 pub struct TracableContext {
-    pub(crate) origin: Uuid,
     pub(crate) info: TracableInfo,
 }
 
@@ -40,10 +39,7 @@ impl HasTracableInfo for TracableContext {
     }
 
     fn set_tracable_info(mut self, info: TracableInfo) -> Self {
-        TracableContext {
-            origin: self.origin,
-            info,
-        }
+        TracableContext { info }
     }
 }
 
@@ -55,11 +51,10 @@ impl std::ops::Deref for TracableContext {
     }
 }
 
-pub fn nom_input(s: &str, origin: Uuid) -> NomSpan<'_> {
+pub fn nom_input(s: &str) -> NomSpan<'_> {
     LocatedSpanEx::new_extra(
         s,
         TracableContext {
-            origin,
             info: TracableInfo::new(),
         },
     )
@@ -75,7 +70,7 @@ macro_rules! operator {
 
             Ok((
                 input,
-                TokenTreeBuilder::tagged_op(tag.fragment, (start, end, input.extra)),
+                TokenTreeBuilder::tagged_op(tag.fragment, (start, end)),
             ))
         }
     };
@@ -193,10 +188,10 @@ pub fn raw_number(input: NomSpan) -> IResult<NomSpan, Tagged<RawNumber>> {
     let (input, head) = digit1(input)?;
 
     match input.fragment.chars().next() {
-        None => return Ok((input, RawNumber::int((start, input.offset, input.extra)))),
+        None => return Ok((input, RawNumber::int((start, input.offset)))),
         Some('.') => (),
         Some(other) if other.is_whitespace() => {
-            return Ok((input, RawNumber::int((start, input.offset, input.extra))))
+            return Ok((input, RawNumber::int((start, input.offset))))
         }
         _ => {
             return Err(nom::Err::Error(nom::error::make_error(
@@ -212,7 +207,7 @@ pub fn raw_number(input: NomSpan) -> IResult<NomSpan, Tagged<RawNumber>> {
         Ok((input, dot)) => input,
 
         // it's just an integer
-        Err(_) => return Ok((input, RawNumber::int((start, input.offset, input.extra)))),
+        Err(_) => return Ok((input, RawNumber::int((start, input.offset)))),
     };
 
     let (input, tail) = digit1(input)?;
@@ -230,7 +225,7 @@ pub fn raw_number(input: NomSpan) -> IResult<NomSpan, Tagged<RawNumber>> {
         }
     }
 
-    Ok((input, RawNumber::decimal((start, end, input.extra))))
+    Ok((input, RawNumber::decimal((start, end))))
 }
 
 #[tracable_parser]
@@ -251,7 +246,7 @@ pub fn dq_string(input: NomSpan) -> IResult<NomSpan, TokenNode> {
     let end = input.offset;
     Ok((
         input,
-        TokenTreeBuilder::tagged_string((start1, end1, input.extra), (start, end, input.extra)),
+        TokenTreeBuilder::tagged_string((start1, end1), (start, end)),
     ))
 }
 
@@ -267,7 +262,7 @@ pub fn sq_string(input: NomSpan) -> IResult<NomSpan, TokenNode> {
 
     Ok((
         input,
-        TokenTreeBuilder::tagged_string((start1, end1, input.extra), (start, end, input.extra)),
+        TokenTreeBuilder::tagged_string((start1, end1), (start, end)),
     ))
 }
 
@@ -285,7 +280,7 @@ pub fn external(input: NomSpan) -> IResult<NomSpan, TokenNode> {
 
     Ok((
         input,
-        TokenTreeBuilder::tagged_external_command(bare, (start, end, input.extra)),
+        TokenTreeBuilder::tagged_external_command(bare, (start, end)),
     ))
 }
 
@@ -308,10 +303,7 @@ pub fn pattern(input: NomSpan) -> IResult<NomSpan, TokenNode> {
 
     let end = input.offset;
 
-    Ok((
-        input,
-        TokenTreeBuilder::tagged_pattern((start, end, input.extra)),
-    ))
+    Ok((input, TokenTreeBuilder::tagged_pattern((start, end))))
 }
 
 #[tracable_parser]
@@ -343,10 +335,7 @@ pub fn bare(input: NomSpan) -> IResult<NomSpan, TokenNode> {
 
     let end = input.offset;
 
-    Ok((
-        input,
-        TokenTreeBuilder::tagged_bare((start, end, input.extra)),
-    ))
+    Ok((input, TokenTreeBuilder::tagged_bare((start, end))))
 }
 
 #[tracable_parser]
@@ -355,10 +344,7 @@ pub fn external_word(input: NomSpan) -> IResult<NomSpan, TokenNode> {
     let (input, _) = take_while1(is_external_word_char)(input)?;
     let end = input.offset;
 
-    Ok((
-        input,
-        TokenTreeBuilder::tagged_external_word((start, end, input.extra)),
-    ))
+    Ok((input, TokenTreeBuilder::tagged_external_word((start, end))))
 }
 
 #[tracable_parser]
@@ -368,10 +354,7 @@ pub fn var(input: NomSpan) -> IResult<NomSpan, TokenNode> {
     let (input, bare) = ident(input)?;
     let end = input.offset;
 
-    Ok((
-        input,
-        TokenTreeBuilder::tagged_var(bare, (start, end, input.extra)),
-    ))
+    Ok((input, TokenTreeBuilder::tagged_var(bare, (start, end))))
 }
 
 #[tracable_parser]
@@ -381,7 +364,7 @@ pub fn ident(input: NomSpan) -> IResult<NomSpan, Tag> {
     let (input, _) = take_while(is_bare_char)(input)?;
     let end = input.offset;
 
-    Ok((input, Tag::from((start, end, input.extra.origin))))
+    Ok((input, Tag::from((start, end))))
 }
 
 #[tracable_parser]
@@ -393,7 +376,7 @@ pub fn flag(input: NomSpan) -> IResult<NomSpan, TokenNode> {
 
     Ok((
         input,
-        TokenTreeBuilder::tagged_flag(bare.tag(), (start, end, input.extra)),
+        TokenTreeBuilder::tagged_flag(bare.tag(), (start, end)),
     ))
 }
 
@@ -406,7 +389,7 @@ pub fn shorthand(input: NomSpan) -> IResult<NomSpan, TokenNode> {
 
     Ok((
         input,
-        TokenTreeBuilder::tagged_shorthand(bare.tag(), (start, end, input.extra)),
+        TokenTreeBuilder::tagged_shorthand(bare.tag(), (start, end)),
     ))
 }
 
@@ -428,7 +411,7 @@ pub fn token_list(input: NomSpan) -> IResult<NomSpan, Tagged<Vec<TokenNode>>> {
 
     Ok((
         input,
-        make_token_list(first, list, None).tagged((start, end, input.extra.origin)),
+        make_token_list(first, list, None).tagged((start, end)),
     ))
 }
 
@@ -446,7 +429,7 @@ pub fn spaced_token_list(input: NomSpan) -> IResult<NomSpan, Tagged<Vec<TokenNod
     out.extend(items.item);
     out.extend(post_ws);
 
-    Ok((input, out.tagged((start, end, input.extra.origin))))
+    Ok((input, out.tagged((start, end))))
 }
 
 fn make_token_list(
@@ -476,10 +459,7 @@ pub fn whitespace(input: NomSpan) -> IResult<NomSpan, TokenNode> {
     let (input, ws1) = space1(input)?;
     let right = input.offset;
 
-    Ok((
-        input,
-        TokenTreeBuilder::tagged_ws((left, right, input.extra)),
-    ))
+    Ok((input, TokenTreeBuilder::tagged_ws((left, right))))
 }
 
 pub fn delimited(input: NomSpan, delimiter: Delimiter) -> IResult<NomSpan, Tagged<Vec<TokenNode>>> {
@@ -495,7 +475,7 @@ pub fn delimited(input: NomSpan, delimiter: Delimiter) -> IResult<NomSpan, Tagge
         items.extend(inner_items.item);
     }
 
-    Ok((input, items.tagged((left, right, input.extra.origin))))
+    Ok((input, items.tagged((left, right))))
 }
 
 #[tracable_parser]
@@ -536,7 +516,7 @@ pub fn raw_call(input: NomSpan) -> IResult<NomSpan, Tagged<CallNode>> {
 
     Ok((
         input,
-        TokenTreeBuilder::tagged_call(items.item, (left, right, input.extra)),
+        TokenTreeBuilder::tagged_call(items.item, (left, right)),
     ))
 }
 
@@ -646,7 +626,7 @@ pub fn pipeline(input: NomSpan) -> IResult<NomSpan, TokenNode> {
 
     Ok((
         input,
-        TokenTreeBuilder::tagged_pipeline(all_items, (start, end, input.extra)),
+        TokenTreeBuilder::tagged_pipeline(all_items, (start, end)),
     ))
 }
 
@@ -670,8 +650,7 @@ fn is_boundary(c: Option<char>) -> bool {
 
 fn is_external_word_char(c: char) -> bool {
     match c {
-        ';' | '|' | '#' | '-' | '"' | '\'' | '$' | '(' | ')' | '[' | ']' | '{' | '}' | '`'
-        | '.' => false,
+        ';' | '|' | '#' | '"' | '\'' | '$' | '(' | ')' | '[' | ']' | '{' | '}' | '`' | '.' => false,
         other if other.is_whitespace() => false,
         _ => true,
     }
@@ -755,7 +734,7 @@ mod tests {
     macro_rules! equal_tokens {
         ($source:tt -> $tokens:expr) => {
             let result = apply(pipeline, "pipeline", $source);
-            let (expected_tree, expected_source) = TokenTreeBuilder::build(uuid::Uuid::nil(), $tokens);
+            let (expected_tree, expected_source) = TokenTreeBuilder::build($tokens);
 
             if result != expected_tree {
                 let debug_result = format!("{}", result.debug($source));
@@ -776,7 +755,7 @@ mod tests {
 
         (<$parser:tt> $source:tt -> $tokens:expr) => {
             let result = apply($parser, stringify!($parser), $source);
-            let (expected_tree, expected_source) = TokenTreeBuilder::build(uuid::Uuid::nil(), $tokens);
+            let (expected_tree, expected_source) = TokenTreeBuilder::build($tokens);
 
             if result != expected_tree {
                 let debug_result = format!("{}", result.debug($source));
@@ -1241,14 +1220,14 @@ mod tests {
     ) -> TokenNode {
         f(NomSpan::new_extra(
             string,
-            TracableContext::new(uuid::Uuid::nil(), TracableInfo::new()),
+            TracableContext::new(TracableInfo::new()),
         ))
         .unwrap()
         .1
     }
 
     fn tag(left: usize, right: usize) -> Tag {
-        Tag::from((left, right, uuid::Uuid::nil()))
+        Tag::from((left, right))
     }
 
     fn delimited(
@@ -1258,24 +1237,20 @@ mod tests {
         right: usize,
     ) -> TokenNode {
         let node = DelimitedNode::new(*delimiter, children);
-        let spanned = node.tagged((left, right, delimiter.tag.origin));
+        let spanned = node.tagged((left, right));
         TokenNode::Delimited(spanned)
     }
 
     fn token(token: RawToken, left: usize, right: usize) -> TokenNode {
-        TokenNode::Token(token.tagged((left, right, uuid::Uuid::nil())))
+        TokenNode::Token(token.tagged((left, right)))
     }
 
     fn build<T>(block: CurriedNode<T>) -> T {
-        let mut builder = TokenTreeBuilder::new(uuid::Uuid::nil());
+        let mut builder = TokenTreeBuilder::new();
         block(&mut builder)
     }
 
     fn build_token(block: CurriedToken) -> TokenNode {
-        TokenTreeBuilder::build(uuid::Uuid::nil(), block).0
-    }
-
-    fn test_uuid() -> uuid::Uuid {
-        uuid::Uuid::nil()
+        TokenTreeBuilder::build(block).0
     }
 }

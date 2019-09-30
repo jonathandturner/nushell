@@ -1,4 +1,4 @@
-use crate::context::{SourceMap, SpanSource};
+use crate::context::{AnchorLocation, SourceMap};
 use crate::parser::parse::parser::TracableContext;
 use crate::prelude::*;
 use crate::Text;
@@ -40,7 +40,7 @@ pub trait TaggedItem: Sized {
             self,
             Tag {
                 span: Span::unknown(),
-                origin: uuid::Uuid::nil(),
+                anchor: uuid::Uuid::nil(),
             },
         )
     }
@@ -87,14 +87,18 @@ impl<T> Tagged<T> {
         self.tag
     }
 
-    pub fn origin(&self) -> uuid::Uuid {
-        self.tag.origin
+    pub fn span(&self) -> Span {
+        self.tag.span
     }
 
-    pub fn origin_name(&self, source_map: &SourceMap) -> Option<String> {
-        match source_map.get(&self.tag.origin) {
-            Some(SpanSource::File(file)) => Some(file.clone()),
-            Some(SpanSource::Url(url)) => Some(url.clone()),
+    pub fn anchor(&self) -> uuid::Uuid {
+        self.tag.anchor
+    }
+
+    pub fn anchor_name(&self, source_map: &SourceMap) -> Option<String> {
+        match source_map.get(&self.tag.anchor) {
+            Some(AnchorLocation::File(file)) => Some(file.clone()),
+            Some(AnchorLocation::Url(url)) => Some(url.clone()),
             _ => None,
         }
     }
@@ -158,14 +162,17 @@ impl From<&std::ops::Range<usize>> for Span {
     Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Serialize, Deserialize, Hash, Getters, new,
 )]
 pub struct Tag {
-    pub origin: Uuid,
+    /// The place in the real world (file or url) where the value was loaded from
+    pub anchor: Uuid,
+
+    /// The place in the source (or line) that the value came from
     pub span: Span,
 }
 
 impl From<Span> for Tag {
     fn from(span: Span) -> Self {
         Tag {
-            origin: uuid::Uuid::nil(),
+            anchor: uuid::Uuid::nil(),
             span,
         }
     }
@@ -174,34 +181,25 @@ impl From<Span> for Tag {
 impl From<&Span> for Tag {
     fn from(span: &Span) -> Self {
         Tag {
-            origin: uuid::Uuid::nil(),
+            anchor: uuid::Uuid::nil(),
             span: *span,
         }
     }
 }
 
-impl From<(usize, usize, TracableContext)> for Tag {
-    fn from((start, end, context): (usize, usize, TracableContext)) -> Self {
+impl From<(usize, usize)> for Tag {
+    fn from((start, end): (usize, usize)) -> Self {
         Tag {
-            origin: context.origin,
-            span: Span::new(start, end),
-        }
-    }
-}
-
-impl From<(usize, usize, Uuid)> for Tag {
-    fn from((start, end, origin): (usize, usize, Uuid)) -> Self {
-        Tag {
-            origin,
+            anchor: Uuid::nil(),
             span: Span::new(start, end),
         }
     }
 }
 
 impl From<(usize, usize, Option<Uuid>)> for Tag {
-    fn from((start, end, origin): (usize, usize, Option<Uuid>)) -> Self {
+    fn from((start, end, anchor): (usize, usize, Option<Uuid>)) -> Self {
         Tag {
-            origin: origin.unwrap_or(uuid::Uuid::nil()),
+            anchor: anchor.unwrap_or(uuid::Uuid::nil()),
             span: Span::new(start, end),
         }
     }
@@ -210,7 +208,7 @@ impl From<(usize, usize, Option<Uuid>)> for Tag {
 impl From<nom_locate::LocatedSpanEx<&str, TracableContext>> for Tag {
     fn from(input: nom_locate::LocatedSpanEx<&str, TracableContext>) -> Tag {
         Tag {
-            origin: input.extra.origin,
+            anchor: Uuid::nil(),
             span: Span::new(input.offset, input.offset + input.fragment.len()),
         }
     }
@@ -229,23 +227,23 @@ impl From<&Tag> for Span {
 }
 
 impl Tag {
-    pub fn unknown_origin(span: Span) -> Tag {
+    pub fn unknown_anchor(span: Span) -> Tag {
         Tag {
-            origin: uuid::Uuid::nil(),
+            anchor: uuid::Uuid::nil(),
             span,
         }
     }
 
-    pub fn unknown_span(origin: Uuid) -> Tag {
+    pub fn unknown_span(anchor: Uuid) -> Tag {
         Tag {
-            origin,
+            anchor,
             span: Span::unknown(),
         }
     }
 
     pub fn unknown() -> Tag {
         Tag {
-            origin: uuid::Uuid::nil(),
+            anchor: uuid::Uuid::nil(),
             span: Span::unknown(),
         }
     }
@@ -253,13 +251,13 @@ impl Tag {
     pub fn until(&self, other: impl Into<Tag>) -> Tag {
         let other = other.into();
         debug_assert!(
-            self.origin == other.origin,
-            "Can only merge two tags with the same origin"
+            self.anchor == other.anchor,
+            "Can only merge two tags with the same anchor"
         );
 
         Tag {
             span: Span::new(self.span.start, other.span.end),
-            origin: self.origin,
+            anchor: self.anchor,
         }
     }
 
@@ -376,14 +374,14 @@ impl language_reporting::ReportingSpan for Tag {
     fn with_start(&self, start: usize) -> Self {
         Tag {
             span: Span::new(start, self.span.end),
-            origin: self.origin,
+            anchor: self.anchor,
         }
     }
 
     fn with_end(&self, end: usize) -> Self {
         Tag {
             span: Span::new(self.span.start, end),
-            origin: self.origin,
+            anchor: self.anchor,
         }
     }
 

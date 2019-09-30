@@ -58,21 +58,21 @@ pub fn autoview(
                         }
                     }
                 };
-            // } else if is_single_origined_text_value(&input) {
-            //     let text = context.get_command("textview");
-            //     if let Some(text) = text {
-            //         let result = text.run(raw.with_input(input), &context.commands);
-            //         result.collect::<Vec<_>>().await;
-            //     } else {
-            //         for i in input {
-            //             match i.item {
-            //                 Value::Primitive(Primitive::String(s)) => {
-            //                     println!("{}", s);
-            //                 }
-            //                 _ => {}
-            //             }
-            //         }
-            //     }
+            } else if is_single_anchored_text_value(&input) {
+                let text = context.get_command("textview");
+                if let Some(text) = text {
+                    let result = text.run(raw.with_input(input), &context.commands, false);
+                    result.collect::<Vec<_>>().await;
+                } else {
+                    for i in input {
+                        match i.item {
+                            Value::Primitive(Primitive::String(s)) => {
+                                println!("{}", s);
+                            }
+                            _ => {}
+                        }
+                    }
+                }
             } else if is_single_text_value(&input) {
                 for i in input {
                     match i.item {
@@ -111,18 +111,17 @@ fn is_single_text_value(input: &Vec<Tagged<Value>>) -> bool {
     }
 }
 
-#[allow(unused)]
-fn is_single_origined_text_value(input: &Vec<Tagged<Value>>) -> bool {
+fn is_single_anchored_text_value(input: &Vec<Tagged<Value>>) -> bool {
     if input.len() != 1 {
         return false;
     }
 
     if let Tagged {
         item: Value::Primitive(Primitive::String(_)),
-        tag: Tag { origin, .. },
+        tag: Tag { anchor, .. },
     } = input[0]
     {
-        origin != uuid::Uuid::nil()
+        anchor != uuid::Uuid::nil()
     } else {
         false
     }

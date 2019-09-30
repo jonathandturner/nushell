@@ -143,12 +143,8 @@ impl<'content> TokensIterator<'content> {
         }
     }
 
-    pub fn origin(&self) -> uuid::Uuid {
-        self.tag.origin
-    }
-
     fn eof_tag(&self) -> Tag {
-        Tag::from((self.tag.span.end(), self.tag.span.end(), self.tag.origin))
+        Tag::from((self.tag.span.end(), self.tag.span.end()))
     }
 
     pub fn typed_tag_at_cursor(&mut self) -> Tagged<&'static str> {

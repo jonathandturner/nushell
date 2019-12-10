@@ -10,7 +10,7 @@ edition = "2018"
 nu-protocol = { path = "../nu-protocol" }
 nu-source = { path = "../nu-source" }
 nu-errors = { path = "../nu-errors" }
-futures-preview = { version = "=0.3.0-alpha.19", features = ["compat", "io-compat"] }
+futures = { version = "=0.3.1", features = ["compat", "io-compat"] }
 surf = "1.0.3"
 url = "2.1.0"
 

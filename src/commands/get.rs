@@ -2,6 +2,7 @@ use crate::commands::WholeStreamCommand;
 use crate::data::base::shape::Shapes;
 use crate::prelude::*;
 use futures_util::pin_mut;
+use futures_util::stream::StreamExt;
 use log::trace;
 use nu_errors::ShellError;
 use nu_protocol::{

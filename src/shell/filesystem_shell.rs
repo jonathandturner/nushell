@@ -5,14 +5,14 @@ use crate::commands::mv::MoveArgs;
 use crate::commands::rm::RemoveArgs;
 use crate::data::dir_entry_dict;
 use crate::prelude::*;
-use crate::shell::completer::NuCompleter;
+//use crate::shell::completer::NuCompleter;
 use crate::shell::shell::Shell;
 use crate::utils::FileStructure;
 use nu_errors::ShellError;
 use nu_protocol::{Primitive, ReturnSuccess, UntaggedValue};
 use nu_source::Tagged;
-use rustyline::completion::FilenameCompleter;
-use rustyline::hint::{Hinter, HistoryHinter};
+// use rustyline::completion::FilenameCompleter;
+// use rustyline::hint::{Hinter, HistoryHinter};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering;
 use trash as SendToTrash;
@@ -20,8 +20,8 @@ use trash as SendToTrash;
 pub struct FilesystemShell {
     pub(crate) path: String,
     pub(crate) last_path: String,
-    completer: NuCompleter,
-    hinter: HistoryHinter,
+    //completer: NuCompleter,
+    // hinter: HistoryHinter,
 }
 
 impl std::fmt::Debug for FilesystemShell {
@@ -35,11 +35,11 @@ impl Clone for FilesystemShell {
         FilesystemShell {
             path: self.path.clone(),
             last_path: self.path.clone(),
-            completer: NuCompleter {
-                file_completer: FilenameCompleter::new(),
-                commands: self.completer.commands.clone(),
-            },
-            hinter: HistoryHinter {},
+            // completer: NuCompleter {
+            //     file_completer: FilenameCompleter::new(),
+            //     commands: self.completer.commands.clone(),
+            // },
+            // hinter: HistoryHinter {},
         }
     }
 }
@@ -51,11 +51,11 @@ impl FilesystemShell {
         Ok(FilesystemShell {
             path: path.to_string_lossy().to_string(),
             last_path: path.to_string_lossy().to_string(),
-            completer: NuCompleter {
-                file_completer: FilenameCompleter::new(),
-                commands,
-            },
-            hinter: HistoryHinter {},
+            // completer: NuCompleter {
+            //     file_completer: FilenameCompleter::new(),
+            //     commands,
+            // },
+            // hinter: HistoryHinter {},
         })
     }
 
@@ -67,11 +67,11 @@ impl FilesystemShell {
         Ok(FilesystemShell {
             path,
             last_path,
-            completer: NuCompleter {
-                file_completer: FilenameCompleter::new(),
-                commands,
-            },
-            hinter: HistoryHinter {},
+            // completer: NuCompleter {
+            //     file_completer: FilenameCompleter::new(),
+            //     commands,
+            // },
+            // hinter: HistoryHinter {},
         })
     }
 }
@@ -1111,16 +1111,16 @@ impl Shell for FilesystemShell {
         self.path = path.to_string_lossy().to_string();
     }
 
-    fn complete(
-        &self,
-        line: &str,
-        pos: usize,
-        ctx: &rustyline::Context<'_>,
-    ) -> Result<(usize, Vec<rustyline::completion::Pair>), rustyline::error::ReadlineError> {
-        self.completer.complete(line, pos, ctx)
-    }
+    // fn complete(
+    //     &self,
+    //     line: &str,
+    //     pos: usize,
+    //     ctx: &rustyline::Context<'_>,
+    // ) -> Result<(usize, Vec<rustyline::completion::Pair>), rustyline::error::ReadlineError> {
+    //     self.completer.complete(line, pos, ctx)
+    // }
 
-    fn hint(&self, line: &str, pos: usize, ctx: &rustyline::Context<'_>) -> Option<String> {
-        self.hinter.hint(line, pos, ctx)
-    }
+    // fn hint(&self, line: &str, pos: usize, ctx: &rustyline::Context<'_>) -> Option<String> {
+    //     self.hinter.hint(line, pos, ctx)
+    // }
 }

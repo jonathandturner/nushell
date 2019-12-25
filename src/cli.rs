@@ -16,8 +16,8 @@ use nu_parser::{
 use nu_protocol::{Signature, UntaggedValue, Value};
 
 use log::{debug, log_enabled, trace};
-use rustyline::error::ReadlineError;
-use rustyline::{self, config::Configurer, config::EditMode, ColorMode, Config, Editor};
+// use rustyline::error::ReadlineError;
+// use rustyline::{self, config::Configurer, config::EditMode, ColorMode, Config, Editor};
 use std::error::Error;
 use std::io::{BufRead, BufReader, Write};
 use std::iter::Iterator;
@@ -347,8 +347,9 @@ pub async fn cli() -> Result<(), Box<dyn Error>> {
 
     let _ = load_plugins(&mut context);
 
-    let config = Config::builder().color_mode(ColorMode::Forced).build();
-    let mut rl: Editor<_> = Editor::with_config(config);
+    // let config = Config::builder().color_mode(ColorMode::Forced).build();
+    // let mut rl: Editor<_> = Editor::with_config(config);
+    let interface = linefeed::Interface::new("color-demo")?;
 
     #[cfg(windows)]
     {
@@ -356,7 +357,7 @@ pub async fn cli() -> Result<(), Box<dyn Error>> {
     }
 
     // we are ok if history does not exist
-    let _ = rl.load_history(&History::path());
+    let _ = interface.load_history(&History::path());
 
     let cc = context.ctrl_c.clone();
     ctrlc::set_handler(move || {
@@ -372,18 +373,18 @@ pub async fn cli() -> Result<(), Box<dyn Error>> {
 
         let cwd = context.shell_manager.path();
 
-        rl.set_helper(Some(crate::shell::Helper::new(context.clone())));
+        // interface.set_helper(Some(crate::shell::Helper::new(context.clone())));
 
-        let edit_mode = config::config(Tag::unknown())?
-            .get("edit_mode")
-            .map(|s| match s.value.expect_string() {
-                "vi" => EditMode::Vi,
-                "emacs" => EditMode::Emacs,
-                _ => EditMode::Emacs,
-            })
-            .unwrap_or(EditMode::Emacs);
+        // let edit_mode = config::config(Tag::unknown())?
+        //     .get("edit_mode")
+        //     .map(|s| match s.value.expect_string() {
+        //         "vi" => EditMode::Vi,
+        //         "emacs" => EditMode::Emacs,
+        //         _ => EditMode::Emacs,
+        //     })
+        //     .unwrap_or(EditMode::Emacs);
 
-        rl.set_edit_mode(edit_mode);
+        // rl.set_edit_mode(edit_mode);
 
         let colored_prompt = {
             #[cfg(feature = "starship-prompt")]
@@ -413,11 +414,14 @@ pub async fn cli() -> Result<(), Box<dyn Error>> {
             String::from_utf8_lossy(&bytes).to_string()
         };
 
-        rl.helper_mut().expect("No helper").colored_prompt = colored_prompt;
+        //rl.helper_mut().expect("No helper").colored_prompt = colored_prompt;
+        interface.set_prompt(&colored_prompt);
+
         let mut initial_command = Some(String::new());
-        let mut readline = Err(ReadlineError::Eof);
+        //let mut readline = Err(ReadlineError::Eof);
+        let mut readline = Ok(linefeed::ReadResult::Eof);
         while let Some(ref cmd) = initial_command {
-            readline = rl.readline_with_initial(&prompt, (&cmd, ""));
+            readline = interface.read_line();
             initial_command = None;
         }
 
@@ -425,14 +429,14 @@ pub async fn cli() -> Result<(), Box<dyn Error>> {
 
         match line {
             LineResult::Success(line) => {
-                rl.add_history_entry(line.clone());
-                let _ = rl.save_history(&History::path());
+                interface.add_history(line.clone());
+                let _ = interface.save_history(&History::path());
                 context.maybe_print_errors(Text::from(line));
             }
 
             LineResult::Error(line, err) => {
-                rl.add_history_entry(line.clone());
-                let _ = rl.save_history(&History::path());
+                interface.add_history(line.clone());
+                let _ = interface.save_history(&History::path());
 
                 context.with_host(|host| {
                     print_err(err, host, &Text::from(line.clone()));
@@ -455,7 +459,7 @@ pub async fn cli() -> Result<(), Box<dyn Error>> {
                 }
 
                 if ctrlcbreak {
-                    let _ = rl.save_history(&History::path());
+                    let _ = interface.save_history(&History::path());
                     std::process::exit(0);
                 } else {
                     context.with_host(|host| host.stdout("CTRL-C pressed (again to quit)"));
@@ -472,7 +476,7 @@ pub async fn cli() -> Result<(), Box<dyn Error>> {
     }
 
     // we are ok if we can not save history
-    let _ = rl.save_history(&History::path());
+    let _ = interface.save_history(&History::path());
 
     Ok(())
 }
@@ -543,11 +547,16 @@ enum LineResult {
     Break,
 }
 
-async fn process_line(readline: Result<String, ReadlineError>, ctx: &mut Context) -> LineResult {
+async fn process_line(
+    readline: std::io::Result<linefeed::ReadResult>,
+    ctx: &mut Context,
+) -> LineResult {
     match &readline {
-        Ok(line) if line.trim() == "" => LineResult::Success(line.clone()),
+        Ok(linefeed::ReadResult::Input(line)) if line.trim() == "" => {
+            LineResult::Success(line.clone())
+        }
 
-        Ok(line) => {
+        Ok(linefeed::ReadResult::Input(line)) => {
             let line = chomp_newline(line);
 
             let result = match nu_parser::parse(&line) {
@@ -594,10 +603,10 @@ async fn process_line(readline: Result<String, ReadlineError>, ctx: &mut Context
                 Err(err) => LineResult::Error(line.to_string(), err),
             }
         }
-        Err(ReadlineError::Interrupted) => LineResult::CtrlC,
-        Err(ReadlineError::Eof) => LineResult::Break,
-        Err(err) => {
-            outln!("Error: {:?}", err);
+        Ok(linefeed::ReadResult::Signal(linefeed::Signal::Interrupt)) => LineResult::CtrlC,
+        Ok(linefeed::ReadResult::Eof) => LineResult::Break,
+        other => {
+            outln!("Error: {:?}", other);
             LineResult::Break
         }
     }

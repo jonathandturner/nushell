@@ -185,62 +185,62 @@ impl Shell for HelpShell {
         Ok(OutputStream::empty())
     }
 
-    fn complete(
-        &self,
-        line: &str,
-        pos: usize,
-        _ctx: &rustyline::Context<'_>,
-    ) -> Result<(usize, Vec<rustyline::completion::Pair>), rustyline::error::ReadlineError> {
-        let mut completions = vec![];
+    // fn complete(
+    //     &self,
+    //     line: &str,
+    //     pos: usize,
+    //     _ctx: &rustyline::Context<'_>,
+    // ) -> Result<(usize, Vec<rustyline::completion::Pair>), rustyline::error::ReadlineError> {
+    //     let mut completions = vec![];
 
-        let mut possible_completion = vec![];
-        let commands = self.commands();
-        for cmd in commands {
-            match cmd {
-                Value { value, .. } => {
-                    for desc in value.data_descriptors() {
-                        possible_completion.push(desc);
-                    }
-                }
-            }
-        }
+    //     let mut possible_completion = vec![];
+    //     let commands = self.commands();
+    //     for cmd in commands {
+    //         match cmd {
+    //             Value { value, .. } => {
+    //                 for desc in value.data_descriptors() {
+    //                     possible_completion.push(desc);
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        let line_chars: Vec<_> = line.chars().collect();
-        let mut replace_pos = pos;
-        while replace_pos > 0 {
-            if line_chars[replace_pos - 1] == ' ' {
-                break;
-            }
-            replace_pos -= 1;
-        }
+    //     let line_chars: Vec<_> = line.chars().collect();
+    //     let mut replace_pos = pos;
+    //     while replace_pos > 0 {
+    //         if line_chars[replace_pos - 1] == ' ' {
+    //             break;
+    //         }
+    //         replace_pos -= 1;
+    //     }
 
-        for command in possible_completion.iter() {
-            let mut pos = replace_pos;
-            let mut matched = true;
-            if pos < line_chars.len() {
-                for chr in command.chars() {
-                    if line_chars[pos] != chr {
-                        matched = false;
-                        break;
-                    }
-                    pos += 1;
-                    if pos == line_chars.len() {
-                        break;
-                    }
-                }
-            }
+    //     for command in possible_completion.iter() {
+    //         let mut pos = replace_pos;
+    //         let mut matched = true;
+    //         if pos < line_chars.len() {
+    //             for chr in command.chars() {
+    //                 if line_chars[pos] != chr {
+    //                     matched = false;
+    //                     break;
+    //                 }
+    //                 pos += 1;
+    //                 if pos == line_chars.len() {
+    //                     break;
+    //                 }
+    //             }
+    //         }
 
-            if matched {
-                completions.push(rustyline::completion::Pair {
-                    display: command.to_string(),
-                    replacement: command.to_string(),
-                });
-            }
-        }
-        Ok((replace_pos, completions))
-    }
+    //         if matched {
+    //             completions.push(rustyline::completion::Pair {
+    //                 display: command.to_string(),
+    //                 replacement: command.to_string(),
+    //             });
+    //         }
+    //     }
+    //     Ok((replace_pos, completions))
+    // }
 
-    fn hint(&self, _line: &str, _pos: usize, _ctx: &rustyline::Context<'_>) -> Option<String> {
-        None
-    }
+    // fn hint(&self, _line: &str, _pos: usize, _ctx: &rustyline::Context<'_>) -> Option<String> {
+    //     None
+    // }
 }

@@ -79,18 +79,18 @@ impl ShellManager {
         self.shells.lock().unwrap()[self.current_shell()].set_path(path)
     }
 
-    pub fn complete(
-        &self,
-        line: &str,
-        pos: usize,
-        ctx: &rustyline::Context<'_>,
-    ) -> Result<(usize, Vec<rustyline::completion::Pair>), rustyline::error::ReadlineError> {
-        self.shells.lock().unwrap()[self.current_shell()].complete(line, pos, ctx)
-    }
+    // pub fn complete(
+    //     &self,
+    //     line: &str,
+    //     pos: usize,
+    //     ctx: &rustyline::Context<'_>,
+    // ) -> Result<(usize, Vec<rustyline::completion::Pair>), rustyline::error::ReadlineError> {
+    //     self.shells.lock().unwrap()[self.current_shell()].complete(line, pos, ctx)
+    // }
 
-    pub fn hint(&self, line: &str, pos: usize, ctx: &rustyline::Context<'_>) -> Option<String> {
-        self.shells.lock().unwrap()[self.current_shell()].hint(line, pos, ctx)
-    }
+    // pub fn hint(&self, line: &str, pos: usize, ctx: &rustyline::Context<'_>) -> Option<String> {
+    //     self.shells.lock().unwrap()[self.current_shell()].hint(line, pos, ctx)
+    // }
 
     pub fn next(&mut self) {
         {

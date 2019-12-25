@@ -28,12 +28,12 @@ pub trait Shell: std::fmt::Debug {
     fn pwd(&self, args: EvaluatedWholeStreamCommandArgs) -> Result<OutputStream, ShellError>;
     fn set_path(&mut self, path: String);
 
-    fn complete(
-        &self,
-        line: &str,
-        pos: usize,
-        ctx: &rustyline::Context<'_>,
-    ) -> Result<(usize, Vec<rustyline::completion::Pair>), rustyline::error::ReadlineError>;
+    // fn complete(
+    //     &self,
+    //     line: &str,
+    //     pos: usize,
+    //     ctx: &rustyline::Context<'_>,
+    // ) -> Result<(usize, Vec<rustyline::completion::Pair>), rustyline::error::ReadlineError>;
 
-    fn hint(&self, _line: &str, _pos: usize, _ctx: &rustyline::Context<'_>) -> Option<String>;
+    // fn hint(&self, _line: &str, _pos: usize, _ctx: &rustyline::Context<'_>) -> Option<String>;
 }

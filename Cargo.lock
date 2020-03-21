@@ -529,6 +529,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "crossbeam"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69323bff1fb41c635347b8ead484a5ca6c3f11914d784170b158d8449ab07f8e"
+dependencies = [
+ "cfg-if",
+ "crossbeam-channel 0.4.0",
+ "crossbeam-deque",
+ "crossbeam-epoch",
+ "crossbeam-queue",
+ "crossbeam-utils 0.7.0",
+]
+
+[[package]]
 name = "crossbeam-channel"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1946,6 +1960,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "minimad"
+version = "0.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a208cf4e8311b21538dd3fd63218ffcb102bf1ef1ce6fabbfb44e2237763ce5"
+dependencies = [
+ "lazy_static 1.4.0",
+]
+
+[[package]]
 name = "miniz_oxide"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2235,6 +2258,7 @@ dependencies = [
  "chrono",
  "clap",
  "clipboard",
+ "crossterm",
  "csv",
  "ctrlc",
  "derive-new",
@@ -2297,6 +2321,7 @@ dependencies = [
  "tempfile",
  "term",
  "termcolor",
+ "termimad",
  "textwrap",
  "toml 0.5.6",
  "trash",
@@ -3866,6 +3891,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bb6bfa289a4d7c5766392812c0a1f4c1ba45afa1ad47803c11e1f407d846d75f"
 dependencies = [
  "winapi-util",
+]
+
+[[package]]
+name = "termimad"
+version = "0.8.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2465304c4e990f37468138d3ef5e8e8bfca744983486fb292368d71bf73bfd99"
+dependencies = [
+ "crossbeam",
+ "crossterm",
+ "lazy_static 1.4.0",
+ "minimad",
+ "thiserror",
 ]
 
 [[package]]

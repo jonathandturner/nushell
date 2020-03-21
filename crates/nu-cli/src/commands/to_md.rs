@@ -38,17 +38,19 @@ fn to_html(args: CommandArgs, registry: &CommandRegistry) -> Result<OutputStream
         let headers = nu_protocol::merge_descriptors(&input);
         let mut output_string = String::new();
 
+        output_string.push_str("|-\n");
         if !headers.is_empty() && (headers.len() > 1 || headers[0] != "<value>") {
             output_string.push_str("|");
             for header in &headers {
+                output_string.push_str("**");
                 output_string.push_str(&htmlescape::encode_minimal(&header));
-                output_string.push_str("|");
+                output_string.push_str("**|");
             }
-            output_string.push_str("\n|");
-            for _ in &headers {
-                output_string.push_str("-");
-                output_string.push_str("|");
-            }
+            output_string.push_str("\n|-");
+            // for _ in &headers {
+            //     output_string.push_str("-");
+            //     output_string.push_str("|");
+            // }
             output_string.push_str("\n");
         }
 
@@ -69,6 +71,7 @@ fn to_html(args: CommandArgs, registry: &CommandRegistry) -> Result<OutputStream
                 }
             }
         }
+        output_string.push_str("|-\n");
 
         yield ReturnSuccess::value(UntaggedValue::string(output_string).into_value(name_tag));
     };

@@ -275,6 +275,7 @@ pub fn create_default_context(
             // Viewers
             whole_stream_command(Autoview),
             whole_stream_command(Table),
+            whole_stream_command(ViewMD),
             // Text manipulation
             whole_stream_command(SplitColumn),
             whole_stream_command(SplitRow),

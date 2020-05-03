@@ -1,0 +1,33 @@
+{
+    "app-id": "org.flatpak.Nushell",
+    "runtime": "org.freedesktop.Platform",
+    "runtime-version": "19.08",
+    "sdk": "org.freedesktop.Sdk",
+    "sdk-extensions" : [ "org.freedesktop.Sdk.Extension.rust-stable" ],
+    "command": "nushell",
+    "build-options": {
+        "append-path": "/usr/lib/sdk/rust-stable/bin",
+	"build-args": [
+	    "--share=network"
+	],
+	"env": {
+	    "RUSTFLAGS": "--remap-path-prefix =../"
+	}
+    },
+    "modules": [
+        {
+            "name": "nushell",
+            "buildsystem": "simple",
+            "build-commands": [
+		"cargo build --all --release --features=stable",
+                "install -D hello.sh /app/bin/hello.sh"
+            ],
+            "sources": [
+                {
+                    "type": "dir",
+                    "path": "."
+                }
+            ]
+        }
+    ]
+}

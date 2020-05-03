@@ -317,31 +317,38 @@ impl RenderView for TableView {
         let mut table = Table::new();
 
         let mut config = crate::data::config::config(Tag::unknown())?;
-        let header_align = config.get("header_align").map_or(Alignment::LEFT, |a| {
-            a.as_string()
-                .map_or(Alignment::LEFT, |a| match a.to_lowercase().as_str() {
-                    "center" | "c" => Alignment::CENTER,
-                    "right" | "r" => Alignment::RIGHT,
-                    _ => Alignment::LEFT,
-                })
-        });
-
-        let header_color = config.get("header_color").map_or(color::GREEN, |c| {
-            c.as_string().map_or(color::GREEN, |c| {
-                str_to_color(c.to_lowercase()).unwrap_or(color::GREEN)
+        let header_align = config
+            .get("header_align")
+            .map(|a| {
+                a.as_string()
+                    .map(|a| match a.to_lowercase().as_str() {
+                        "center" | "c" => Alignment::CENTER,
+                        "right" | "r" => Alignment::RIGHT,
+                        _ => Alignment::LEFT,
+                    })
+                    .unwrap_or(Alignment::LEFT)
             })
-        });
+            .unwrap_or(Alignment::LEFT);
 
-        let header_style =
-            config
-                .remove("header_style")
-                .map_or(vec![Attr::Bold], |y| match y.value {
-                    UntaggedValue::Table(t) => to_style_vec(t),
-                    UntaggedValue::Primitive(p) => vec![p
-                        .into_string(Span::unknown())
-                        .map_or(Attr::Bold, |s| str_to_style(s).unwrap_or(Attr::Bold))],
-                    _ => vec![Attr::Bold],
-                });
+        let header_color: u32 = config
+            .get("header_color")
+            .map(|c| {
+                c.as_string()
+                    .map(|c| str_to_color(c.to_lowercase()))
+                    .unwrap_or(color::GREEN)
+            })
+            .unwrap_or(color::GREEN);
+
+        let header_style = config
+            .remove("header_style")
+            .map(|y| match y.value {
+                UntaggedValue::Table(t) => to_style_vec(t),
+                UntaggedValue::Primitive(p) => vec![p
+                    .into_string(Span::unknown())
+                    .map_or(Attr::Bold, |s| str_to_style(s).unwrap_or(Attr::Bold))],
+                _ => vec![Attr::Bold],
+            })
+            .unwrap_or(vec![Attr::Bold]);
 
         let table_mode = if let Some(s) = config.get("table_mode") {
             match s.as_string() {
@@ -380,7 +387,7 @@ impl RenderView for TableView {
             .map(|h| {
                 let mut c = Cell::new_align(h, header_align)
                     .with_style(Attr::ForegroundColor(header_color));
-                for &s in &header_style {
+                for &s in header_style.iter() {
                     c.style(s);
                 }
                 c

@@ -51,7 +51,6 @@ dunce = "1.0.1"
 futures = {version = "0.3", features = ["compat", "io-compat"]}
 log = "0.4.8"
 pretty_env_logger = "0.4.0"
-starship = "0.43.0"
 quick-xml = "0.18.1"
 
 [dev-dependencies]
@@ -75,7 +74,7 @@ default = [
   "term-support",
   "uuid-support",
 ]
-stable = ["default", "binaryview", "match", "tree", "post", "fetch", "clipboard-cli", "trash-support", "start", "starship-prompt", "bson", "sqlite"]
+stable = ["default", "binaryview", "match", "tree", "post", "fetch", "clipboard-cli", "trash-support", "start", "bson", "sqlite"]
 
 # Default
 inc = ["semver", "nu_plugin_inc"]
@@ -99,7 +98,6 @@ ctrlc-support = ["nu-cli/ctrlc"]
 directories-support = ["nu-cli/directories", "nu-cli/dirs"]
 git-support = ["nu-cli/git2"]
 ptree-support = ["nu-cli/ptree"]
-starship-prompt = ["nu-cli/starship-prompt"]
 term-support = ["nu-cli/term"]
 trash-support = ["nu-cli/trash-support"]
 uuid-support = ["nu-cli/uuid_crate"]

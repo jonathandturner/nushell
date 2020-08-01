@@ -256,30 +256,18 @@ async fn to_html(
     let mut regex_hm: HashMap<u32, (&str, String)> = HashMap::new();
     let color_hm = get_colors(dark, &theme);
 
-    // change the color of the page
-    output_string.push_str(&format!(
-        // r"<style>body {{ background-color:{};color:{};font-family:'FiraFira Code'; }}</style><body>",
-        r"<style>body {{ background-color:{};color:{}; }}</style><body>",
-        color_hm
-            .get("background")
-            .expect("Error getting background color"),
-        color_hm
-            .get("foreground")
-            .expect("Error getting foreground color")
-    ));
-
     let inner_value = match input.len() {
         0 => String::default(),
         1 => match headers {
-            Some(headers) => html_table(input, headers, color_hm),
+            Some(headers) => html_table(input, headers, &color_hm),
             None => {
                 let value = &input[0];
-                html_value(value)
+                html_value(value, &color_hm)
             }
         },
         _ => match headers {
-            Some(headers) => html_table(input, headers, color_hm),
-            None => html_list(input),
+            Some(headers) => html_table(input, headers, &color_hm),
+            None => html_list(input, &color_hm),
         },
     };
 
@@ -300,19 +288,19 @@ async fn to_html(
     )))
 }
 
-fn html_list(list: Vec<Value>) -> String {
+fn html_list(list: Vec<Value>, color_hm: &HashMap<&str, String>) -> String {
     let mut output_string = String::new();
     output_string.push_str("<ol>");
     for value in list {
         output_string.push_str("<li>");
-        output_string.push_str(&html_value(&value));
+        output_string.push_str(&html_value(&value, &color_hm));
         output_string.push_str("</li>");
     }
     output_string.push_str("</ol>");
     output_string
 }
 
-fn html_table(table: Vec<Value>, headers: Vec<String>, color_hm: HashMap<&str, String>) -> String {
+fn html_table(table: Vec<Value>, headers: Vec<String>, color_hm: &HashMap<&str, String>) -> String {
     let mut output_string = String::new();
     // Add grid lines to html
     // let mut output_string = "<html><head><style>".to_string();
@@ -346,7 +334,7 @@ fn html_table(table: Vec<Value>, headers: Vec<String>, color_hm: HashMap<&str, S
             for header in &headers {
                 let data = row.get_data(header);
                 output_string.push_str("<td>");
-                output_string.push_str(&html_value(data.borrow()));
+                output_string.push_str(&html_value(data.borrow(), color_hm));
                 output_string.push_str("</td>");
             }
             output_string.push_str("</tr>");
@@ -357,8 +345,18 @@ fn html_table(table: Vec<Value>, headers: Vec<String>, color_hm: HashMap<&str, S
     output_string
 }
 
-fn html_value(value: &Value) -> String {
+fn html_value(value: &Value, color_hm: &HashMap<&str, String>) -> String {
     let mut output_string = String::new();
+    // change the color of tables
+    output_string.push_str(&format!(
+        r"<div style='background-color:{};color:{};'>",
+        color_hm
+            .get("background")
+            .expect("Error getting background color"),
+        color_hm
+            .get("foreground")
+            .expect("Error getting foreground color")
+    ));
     match &value.value {
         UntaggedValue::Primitive(Primitive::Binary(b)) => {
             // This might be a bit much, but it's fun :)
@@ -421,6 +419,8 @@ fn html_value(value: &Value) -> String {
                 .replace("\n", "<br>"),
         ),
     }
+    output_string.push_str("</div>");
+
     output_string
 }
 

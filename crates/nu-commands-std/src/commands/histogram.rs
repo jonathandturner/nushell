@@ -162,7 +162,7 @@ pub async fn histogram(args: CommandArgs) -> Result<OutputStream, ShellError> {
                     "{}%",
                     // Some(2) < the number of digits
                     // true < group the digits
-                    crate::commands::str_::from::action(&percentage, &name, Some(2), true)?
+                    nu_commands_core::commands::str_::from::action(&percentage, &name, Some(2), true)?
                         .as_string()?
                 );
                 fact.insert_untagged("percentage", UntaggedValue::string(fmt_percentage));

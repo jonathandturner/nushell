@@ -1,6 +1,6 @@
 use clap::{App, Arg};
 use log::LevelFilter;
-use nu_cli::create_default_context;
+use nu_commands_std::create_default_context;
 use nu_commands_core::utils::test_bins as binaries;
 use std::error::Error;
 use std::fs::File;

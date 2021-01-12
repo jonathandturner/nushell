@@ -20,6 +20,7 @@ members = ["crates/*/"]
 [dependencies]
 nu-cli = {version = "0.25.2", path = "./crates/nu-cli"}
 nu-commands-core = {version = "0.25.2", path = "./crates/nu-commands-core"}
+nu-commands-std = {version = "0.25.2", path = "./crates/nu-commands-std"}
 nu-data = {version = "0.25.2", path = "./crates/nu-data"}
 nu-engine = {version = "0.25.2", path = "./crates/nu-engine"}
 nu-errors = {version = "0.25.2", path = "./crates/nu-errors"}
@@ -64,13 +65,20 @@ nu-test-support = {version = "0.25.2", path = "./crates/nu-test-support"}
 
 [features]
 ctrlc-support = ["nu-cli/ctrlc", "nu-commands-core/ctrlc"]
-directories-support = ["nu-cli/directories", "nu-cli/dirs", "nu-commands-core/directories", "nu-commands-core/dirs", "nu-data/directories", "nu-data/dirs"]
+directories-support = [
+  "nu-cli/directories",
+  "nu-cli/dirs",
+  "nu-commands-core/directories",
+  "nu-commands-core/dirs",
+  "nu-data/directories",
+  "nu-data/dirs",
+]
 git-support = ["nu-cli/git2", "nu-commands-core/git2"]
 ptree-support = ["nu-cli/ptree", "nu-commands-core/ptree"]
-rich-benchmark = ["nu-cli/rich-benchmark", "nu-commands-core/rich-benchmark"]
+rich-benchmark = ["nu-cli/rich-benchmark", "nu-commands-std/rich-benchmark"]
 rustyline-support = ["nu-cli/rustyline-support", "nu-commands-core/rustyline-support"]
 term-support = ["nu-cli/term", "nu-commands-core/term"]
-uuid-support = ["nu-cli/uuid_crate", "nu-commands-core/uuid_crate"]
+uuid-support = ["nu-cli/uuid_crate", "nu-commands-std/uuid_crate"]
 which-support = ["nu-cli/ichwh", "nu-cli/which", "nu-commands-core/ichwh", "nu-commands-core/which"]
 
 default = [
@@ -113,7 +121,7 @@ zip-support = ["nu-cli/zip", "nu-commands-core/zip"]
 binaryview = ["nu_plugin_binaryview"]
 bson = ["nu_plugin_from_bson", "nu_plugin_to_bson"]
 chart = ["nu_plugin_chart"]
-clipboard-cli = ["nu-cli/clipboard-cli", "nu-commands-core/clipboard-cli"]
+clipboard-cli = ["nu-cli/clipboard-cli", "nu-commands-std/clipboard-cli"]
 s3 = ["nu_plugin_s3"]
 selector = ["nu_plugin_selector"]
 sqlite = ["nu_plugin_from_sqlite", "nu_plugin_to_sqlite"]

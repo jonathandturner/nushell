@@ -8,6 +8,7 @@ pub fn create_default_context(interactive: bool) -> Result<EvaluationContext, Bo
 
     {
         use crate::commands::*;
+        use nu_commands_core::commands::*;
 
         context.add_commands(vec![
             // Fundamentals

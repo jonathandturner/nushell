@@ -1,5 +1,5 @@
 use crate::line_editor::configure_ctrl_c;
-use nu_commands_core::commands::default_context::create_default_context;
+use nu_commands_std::commands::default_context::create_default_context;
 #[allow(unused_imports)]
 use nu_commands_core::maybe_print_errors;
 use nu_engine::run_block;

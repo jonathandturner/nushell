@@ -43,7 +43,7 @@ where
 }
 
 async fn operate<F>(
-    input: crate::InputStream,
+    input: nu_stream::InputStream,
     paths: Vec<ColumnPath>,
     action: &'static F,
 ) -> Result<OutputStream, ShellError>

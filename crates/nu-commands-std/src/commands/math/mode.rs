@@ -72,7 +72,7 @@ pub fn mode(values: &[Value], name: &Tag) -> Result<Value, ShellError> {
         }
     }
 
-    crate::commands::sort_by::sort(&mut modes, &[], name, false)?;
+    nu_commands_core::commands::sort_by::sort(&mut modes, &[], name, false)?;
     Ok(UntaggedValue::Table(modes).into_value(name))
 }
 

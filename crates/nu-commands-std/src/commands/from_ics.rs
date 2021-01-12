@@ -1,4 +1,3 @@
-extern crate ical;
 use crate::prelude::*;
 use ical::parser::ical::component::*;
 use ical::property::Property;

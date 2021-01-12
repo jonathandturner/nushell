@@ -3043,7 +3043,7 @@ dependencies = [
  "itertools",
  "log 0.4.11",
  "nu-cli",
- "nu-command",
+ "nu-commands-core",
  "nu-data",
  "nu-engine",
  "nu-errors",
@@ -3118,7 +3118,7 @@ dependencies = [
  "lazy_static 1.4.0",
  "log 0.4.11",
  "meval",
- "nu-command",
+ "nu-commands-core",
  "nu-data",
  "nu-engine",
  "nu-errors",
@@ -3179,7 +3179,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "nu-command"
+name = "nu-commands-core"
 version = "0.25.2"
 dependencies = [
  "Inflector",
@@ -3280,6 +3280,10 @@ dependencies = [
  "which",
  "zip",
 ]
+
+[[package]]
+name = "nu-commands-std"
+version = "0.25.2"
 
 [[package]]
 name = "nu-data"

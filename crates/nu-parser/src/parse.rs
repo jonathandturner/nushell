@@ -1899,7 +1899,7 @@ fn expand_shorthand_forms(
             && !lite_pipeline.commands[0].parts[0].starts_with('$')
         {
             let assignment: Vec<_> = lite_pipeline.commands[0].parts[0].split('=').collect();
-            if assignment.len() != 2 {
+            if assignment.len() != 2 || assignment[0].is_empty() || assignment[1].is_empty() {
                 (
                     lite_pipeline.clone(),
                     None,
